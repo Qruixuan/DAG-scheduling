@@ -1,0 +1,95 @@
+#include "GraphKit.h"
+
+#include <time.h>
+#include <iostream>
+
+void GraphKit::dfs(int node, int &currentMemory, int &peakMemory, int *copyInDegree, int &cnt)
+{
+    *(dfsSequence + cnt) = node;
+    currentMemory += outSum[node] - inSum[node];
+    if (peakMemory < currentMemory)
+        peakMemory = currentMemory;
+
+    for (int edge = graph.getEdgeHead(node); graph.isValid(edge); edge = graph.getEdgeNext(edge))
+    {
+        int to = graph.getEdgeTo(edge);
+
+        copyInDegree[to]--;
+        if (copyInDegree[to] == 0)
+            dfs(to, currentMemory, peakMemory, copyInDegree, ++cnt);
+    }
+}
+
+void GraphKit::runDfs()
+{
+    dfsSequence = new int[graph.getNumNodes()];
+    int *copyInDegree = new int[graph.getNumNodes()];
+    for (int node = 0; node < graph.getNumNodes(); node++)
+        copyInDegree[node] = inDegree[node];
+
+    int currentMemory = 0;
+    int peakMemory = 0;
+    int cnt = -1;
+
+    time_t startTime = clock();
+    for (int index = 0; index < numStartNodes; index++)
+    {
+        dfs(startNodes[index], currentMemory, peakMemory, copyInDegree, ++cnt);
+    }
+    time_t endTime = clock();
+
+    dfsTime = (double)(endTime - startTime) / CLOCKS_PER_SEC;
+
+    dfsMemory = peakMemory;
+    if (memory == -1)
+        memory = dfsMemory;
+    else if (memory > dfsMemory)
+        memory = dfsMemory;
+}
+
+int GraphKit::getDfsMemory()
+{
+    return dfsMemory;
+}
+
+double GraphKit::getDfsTime()
+{
+    return dfsTime;
+}
+
+void GraphKit::printDfsSequence()
+{
+    std::cout << "dfs sequence: {";
+    for (int i = 0; i < graph.getNumNodes(); i++)
+    {
+        std::cout << *(dfsSequence + i);
+        if (i != graph.getNumNodes() - 1)
+            std::cout << ", ";
+    }
+    std::cout << "}" << std::endl
+              << std::endl;
+}
+
+// int main(int argc, char* argv[]) {
+//     int n, m;
+//     std::cin >> n >> m;
+//     Graph d(n, m);
+//     std::vector<std::vector<int>> mat;
+//     mat.assign(n, std::vector<int>(n, 0));
+//     for (int i = 0; i < m; i++)
+//     {
+//         int u, v, w;
+//         std::cin >> u >> v >> w;
+//         if(mat[u][v]==0){
+//             d.addEdge(u, v, w);
+//             mat[u][v]=1;
+//         }
+//         // d.addEdge(u, v, w);
+//     }
+
+//     GraphKit k(d);
+//     k.runDfs();
+//     std::cout<<"memory using dfs: "<<k.getDfsMemory()<<std::endl;
+//     k.printDfsSequence();
+
+// }
